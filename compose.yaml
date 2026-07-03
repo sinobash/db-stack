@@ -1,0 +1,92 @@
+services:
+  mysql:
+    image: ${MYSQL_VERSION}
+    container_name: dev_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "${LOCAL_LISTEN_ADDR}:${HOST_PORT_MYSQL}:3306"
+    volumes:
+      - mysqldata:/var/lib/mysql
+    networks:
+      - shared-network   # Attach MySQL to the network
+    healthcheck:
+      test:
+        - CMD
+        - mysqladmin ping -h localhost
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: dev_phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      ARBITRARY: 0
+    ports:
+      - "${LOCAL_LISTEN_ADDR}:8090:80"
+    networks:
+      - shared-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  postgres:
+    image: ${PGSQL_VERSION}
+    container_name: dev_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${PGSQL_ROOT_USER}
+      POSTGRES_PASSWORD: ${PGSQL_ROOT_PASSWORD}
+      POSTGRES_HOST_AUTH_METHOD: ${PGSQL_HOST_AUTH_METHOD:-trust}
+      POSTGRES_DB: ${PGSQL_DATABASE}
+    ports:
+      - "${LOCAL_LISTEN_ADDR}:${HOST_PORT_PGSQL}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - shared-network
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U ${PGSQL_ROOT_USER:-postgres} -d ${PGSQL_DATABASE:-testdb}
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  mongodb:
+    image: ${MONGODB_VERSION}
+    container_name: dev_mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    ports:
+      - "${LOCAL_LISTEN_ADDR}:${HOST_PORT_MONGODB}:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - shared-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mysql_data:
+  pg_data:
+  mongo_data:
+
+networks:
+  shared-network:
+    external: true
+    name: shared_ext_net
