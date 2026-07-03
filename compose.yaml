@@ -11,17 +11,15 @@ services:
     ports:
       - "${LOCAL_LISTEN_ADDR}:${HOST_PORT_MYSQL}:3306"
     volumes:
-      - mysqldata:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
     networks:
       - shared-network   # Attach MySQL to the network
     healthcheck:
-      test:
-        - CMD
-        - mysqladmin ping -h localhost
-      interval: 5s
+      test: ["CMD-SHELL", "mysql -u root -p$$MYSQL_ROOT_PASSWORD -e 'SELECT 1;'"]
+      interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 10s
+      start_period: 15s
 
   phpmyadmin:
     image: phpmyadmin:latest
@@ -29,8 +27,9 @@ services:
     restart: unless-stopped
     environment:
       PMA_HOST: mysql
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      ARBITRARY: 0
+      PMA_PORT: ${HOST_PORT_MYSQL}
+      #MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      #ARBITRARY: 0
     ports:
       - "${LOCAL_LISTEN_ADDR}:8090:80"
     networks:
@@ -51,7 +50,7 @@ services:
     ports:
       - "${LOCAL_LISTEN_ADDR}:${HOST_PORT_PGSQL}:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pg_data:/var/lib/postgresql
     networks:
       - shared-network
     healthcheck:
