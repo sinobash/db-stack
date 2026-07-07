@@ -14,22 +14,25 @@ services:
       - mysql_data:/var/lib/mysql
     networks:
       - shared-network   # Attach to the shared network
+    command: --mysql-native-password=ON
     healthcheck:
-      test: ["CMD-SHELL", "mysql -u root -p$$MYSQL_ROOT_PASS -e 'SELECT 1;'"]
-      interval: 15s
+      # test: ["CMD-SHELL", "mysqladmin ping -h localhost -p$$MYSQL_ROOT_PASS"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 30s
+      # Crucial: Prevents container from being marked unhealthy during the long first boot
+      start_period: 45s
 
   phpmyadmin:
     image: phpmyadmin:latest
     container_name: dev_phpmyadmin
-    restart: unless-stopped
+    restart: always
     environment:
       PMA_HOST: mysql
       PMA_PORT: ${HOST_PORT_MYSQL}
       #MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASS}
-      #ARBITRARY: 0
+      ARBITRARY: 1
     ports:
       - "${LOCAL_LISTEN_ADDR}:8090:80"
     networks:
