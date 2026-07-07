@@ -4,18 +4,18 @@ services:
     container_name: dev_mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASS}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_PASSWORD: ${MYSQL_PASS}
     ports:
       - "${LOCAL_LISTEN_ADDR}:${HOST_PORT_MYSQL}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
-      - shared-network   # Attach MySQL to the network
+      - shared-network   # Attach to the shared network
     healthcheck:
-      test: ["CMD-SHELL", "mysql -u root -p$$MYSQL_ROOT_PASSWORD -e 'SELECT 1;'"]
+      test: ["CMD-SHELL", "mysql -u root -p$$MYSQL_ROOT_PASS -e 'SELECT 1;'"]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -28,7 +28,7 @@ services:
     environment:
       PMA_HOST: mysql
       PMA_PORT: ${HOST_PORT_MYSQL}
-      #MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      #MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASS}
       #ARBITRARY: 0
     ports:
       - "${LOCAL_LISTEN_ADDR}:8090:80"
@@ -44,7 +44,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${PGSQL_ROOT_USER}
-      POSTGRES_PASSWORD: ${PGSQL_ROOT_PASSWORD}
+      POSTGRES_PASSWORD: ${PGSQL_ROOT_PASS}
       POSTGRES_HOST_AUTH_METHOD: ${PGSQL_HOST_AUTH_METHOD:-trust}
       POSTGRES_DB: ${PGSQL_DATABASE}
     ports:
@@ -68,7 +68,7 @@ services:
     restart: unless-stopped
     environment:
       ACCEPT_EULA: Y
-      MSSQL_SA_PASSWORD: ${MSSQL_ROOT_PASSWORD}
+      MSSQL_SA_PASSWORD: ${MSSQL_ROOT_PASS}
     ports:
       - "${LOCAL_LISTEN_ADDR}:${HOST_PORT_MSSQL}:1433"
     volumes:
@@ -76,7 +76,7 @@ services:
     networks:
       - shared-network
     healthcheck:
-      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_ROOT_PASSWORD\" -C -Q \"SELECT 1\" || exit 1"]
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_ROOT_PASS\" -C -Q \"SELECT 1\" || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 3
@@ -87,7 +87,7 @@ services:
     container_name: dev_mongodb
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASS}
     ports:
       - "${LOCAL_LISTEN_ADDR}:${HOST_PORT_MONGODB}:27017"
     volumes:
